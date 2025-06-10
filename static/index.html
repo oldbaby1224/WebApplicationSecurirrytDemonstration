@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Application Security Demonstration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-blue-600 text-white p-4">
+        <h1 class="text-2xl font-bold text-center">Web Application Security Demonstration</h1>
+        <div class="absolute top-4 right-4 flex items-center space-x-2">
+            <span id="currentUser" class="text-sm">Logged in as: Guest (Role: guest)</span>
+            <button id="loginBtn" onclick="showLogin()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>
+            <button id="logoutBtn" onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded hidden">Logout</button>
+            <button onclick="showCreateAccount()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Create Account</button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <section id="introSection" class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold text-blue-800">Welcome to the website, Guest!</h2>
+            <p class="text-gray-600">This application demonstrates common web vulnerabilities and their mitigations. As a guest, you can only view this introduction. Please log in or create an account to explore further features.</p>
+        </section>
+
+        <div id="loginForm" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+                <h3 class="text-lg font-semibold mb-4">Login</h3>
+                <input id="loginUsername" placeholder="Username" class="w-full p-2 mb-2 border rounded">
+                <input id="loginPassword" type="password" placeholder="Password" class="w-full p-2 mb-2 border rounded">
+                <button onclick="login()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">Submit</button>
+                <button onclick="document.getElementById('loginForm').classList.add('hidden')" class="text-gray-500 mt-2">Close</button>
+            </div>
+        </div>
+
+        <div id="createAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+                <h3 class="text-lg font-semibold mb-4">Create Account</h3>
+                <input id="createUsername" placeholder="Username" class="w-full p-2 mb-2 border rounded">
+                <input id="createPassword" type="password" placeholder="Password" class="w-full p-2 mb-2 border rounded">
+                <select id="createRole" class="w-full p-2 mb-2 border rounded">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="auditor">Auditor</option>
+                </select>
+                <select id="createMode" class="w-full p-2 mb-2 border rounded">
+                    <option value="safe">Safe (with hashing & password policy)</option>
+                    <option value="vulnerable">Vulnerable (plain text password)</option>
+                </select>
+                <button onclick="createAccount()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">Create</button>
+                <button onclick="closeCreateAccount()" class="text-gray-500 mt-2">Close</button>
+                <pre id="createAccountOutput" class="mt-2 text-sm text-gray-600"></pre>
+            </div>
+        </div>
+
+        <section id="dashboardSection" class="hidden mb-8">
+            <h2 class="text-xl font-semibold text-blue-800">Security Vulnerabilities and Workarounds</h2>
+            <p class="text-gray-600">Explore common web vulnerabilities and their protections. Each section demonstrates a vulnerability, its impact, and how it was mitigated.</p>
+        </section>
+
+        <section id="accessControlSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">Broken Access Control</h2>
+            <p><strong>Description:</strong> Broken access control allows unauthorized users to access restricted resources, such as other users' data, by manipulating parameters like user IDs.</p>
+            <p><strong>Impact:</strong> Attackers can access sensitive data, modify user profiles, or escalate privileges, compromising user privacy and system integrity.</p>
+            <p><strong>Vulnerable Example:</strong> Accessing any user's profile by changing the user_id parameter.</p>
+            <div class="flex space-x-2">
+                <input id="userId" placeholder="Enter user ID" class="p-2 border rounded">
+                <button onclick="vulnerableAccess()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Get Data (Vulnerable)</button>
+            </div>
+            <p><strong>Protection:</strong> Enforce authentication and validate that the requested user ID matches the authenticated user's ID.</p>
+            <p><strong>How Fixed:</strong> The protected endpoint checks if the user is authenticated and ensures the requested user_id matches the current user's ID, preventing unauthorized access.</p>
+            <div class="flex space-x-2">
+                <input id="protectedUserId" placeholder="Enter user ID" class="p-2 border rounded">
+                <button onclick="protectedAccess()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Get Data (Protected)</button>
+            </div>
+            <pre id="accessOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="sqlInjectionSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">SQL Injection</h2>
+            <p><strong>Description:</strong> SQL injection occurs when untrusted input is included in SQL queries, allowing attackers to execute arbitrary database commands.</p>
+            <p><strong>Impact:</strong> Attackers can retrieve sensitive data, modify database records, or bypass authentication, potentially gaining full control over the application.</p>
+            <p><strong>Vulnerable Example:</strong> Entering malicious input like <code>1' OR '1'='1</code> can retrieve all users.</p>
+            <div class="flex space-x-2">
+                <input id="sqlInjectionInput" placeholder="Enter username" class="p-2 border rounded">
+                <button onclick="vulnerableSQLInjection()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Search (Vulnerable)</button>
+            </div>
+            <p><strong>Protection:</strong> Use parameterized queries and restrict queries to the authenticated user's data.</p>
+            <p><strong>How Fixed:</strong> The protected endpoint uses parameterized queries and checks that the queried username matches the authenticated user, preventing unauthorized data access.</p>
+            <div class="flex space-x-2">
+                <input id="safeSqlInjectionInput" placeholder="Enter username" class="p-2 border rounded">
+                <button onclick="safeSQLInjection()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Search (Protected)</button>
+            </div>
+            <pre id="sqlInjectionOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="xssSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">Cross-Site Scripting (XSS)</h2>
+            <p><strong>Description:</strong> XSS allows attackers to inject malicious scripts into web pages viewed by other users.</p>
+            <p><strong>Impact:</strong> Attackers can steal session cookies, redirect users to malicious sites, or deface the application.</p>
+            <p><strong>Vulnerable Example:</strong> Injecting a XSS script which executes in the browser (use demo mode to bypass WAF).</p>
+            <div class="flex space-x-2">
+                <input id="xssInput" placeholder="Enter text" class="p-2 border rounded">
+                <button onclick="vulnerableXSS()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Display (Vulnerable)</button>
+            </div>
+            <p><strong>Protection:</strong> Escape user input, implement WAF, and use Content Security Policy (CSP).</p>
+            <p><strong>How Fixed:</strong> The protected endpoint uses multiple cs: WAF blocks malicious input, input sanitization escapes special characters, and CSP restricts script execution.</p>
+            <div class="flex space-x-2">
+                <input id="safeXssInput" placeholder="Enter text" class="p-2 border rounded">
+                <button onclick="safeXSS()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Display (Protected)</button>
+                <button onclick="clearXssInputs()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Clear</button>
+            </div>
+            <div id="xssOutput" class="mt-2 p-2 bg-gray-100 rounded"></div>
+        </section>
+
+        <section id="wafSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">WAF Demonstration</h2>
+            <p><strong>Description:</strong> Test the Web Application Firewall (WAF) by entering potentially malicious input and see if it gets blocked.</p>
+            <p><strong>Example Inputs to Try:</strong> <code>alert('test');</code>, <code>UNION SELECT</code>, or <code>../etc/passwd</code>.</p>
+            <div class="flex space-x-2">
+                <input id="wafInput" placeholder="Enter text to test WAF" class="p-2 border rounded">
+                <button onclick="testWAF()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Test WAF</button>
+            </div>
+            <pre id="wafOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="ddosSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">DDoS Vulnerability</h2>
+            <p><strong>Description:</strong> DDoS attacks overwhelm the server with requests, causing denial of service.</p>
+            <p><strong>Impact:</strong> The application becomes unresponsive, affecting availability for legitimate users.</p>
+            <p><strong>Vulnerable Example:</strong> No rate limiting allows unlimited requests to overload the server.</p>
+            <div class="flex space-x-2">
+                <button onclick="simulateDDoS('vulnerable')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Simulate DDoS (Vulnerable)</button>
+                <button onclick="stopDDoS()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Stop</button>
+            </div>
+            <p><strong>Protection:</strong> Implement rate limiting to restrict the number of requests per IP.</p>
+            <p><strong>How Fixed:</strong> The protected endpoint limits requests to 10 per minute per IP, preventing overload.</p>
+            <div class="flex space-x-2">
+                <button onclick="simulateDDoS('protected')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Simulate DDoS (Protected)</button>
+                <button onclick="stopDDoS()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Stop</button>
+            </div>
+            <pre id="ddosOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="ssrfSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">Server-Side Request Forgery & Path Traversal</h2>
+            <p><strong>Description:</strong> Allows attackers to make unauthorized requests to internal or external resources or access unauthorized files.</p>
+            <p><strong>Impact:</strong> Attackers can access internal services, retrieve sensitive data, or read server files (e.g., secret.txt or ../etc/passwd).</p>
+            <p><strong>Vulnerable Example:</strong> Sending a request to any URL or accessing any file (e.g., secret.txt or ../etc/passwd).</p>
+            <div class="flex space-x-2">
+                <input id="ssrfResource" type="text" placeholder="Enter URL or filepath" class="p-2 border rounded w-1/2">
+                <button onclick="vulnerableSSRF()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Fetch (Vulnerable)</button>
+                <button onclick="protectedSSRF()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Fetch (Protected)</button>
+            </div>
+            <p><strong>Protection:</strong> For SSRF, restrict requests to allowed domains. For Path Traversal, use a whitelist of allowed files.</p>
+            <p><strong>How Fixed:</strong> The protected endpoint only allows requests to whitelisted domains (e.g., example.com) for SSRF and restricts file access to a predefined list (e.g., public.txt).</p>
+            <pre id="ssrfOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="csrfSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-red-600">Cross-Site Request Forgery (CSRF)</h2>
+            <p><strong>Description:</strong> CSRF tricks authenticated users into performing unintended actions on a web application.</p>
+            <p><strong>Impact:</strong> Attackers can modify user data, change settings, or perform unauthorized transactions.</p>
+            <p><strong>Vulnerable Example:</strong> Changing a user's role without validating the request's origin.</p>
+            <div class="flex space-x-2">
+                <input id="csrfUserId" placeholder="Enter user ID" class="p-2 border rounded">
+                <select id="csrfRole" class="p-2 border rounded">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="auditor">Auditor</option>
+                </select>
+                <button onclick="vulnerableCSRF()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Update Role (Vulnerable)</button>
+            </div>
+            <p><strong>Protection:</strong> Use CSRF tokens to validate the authenticity of requests and restrict role changes to admins.</p>
+            <p><strong>How Fixed:</strong> The protected endpoint requires a valid CSRF token, authentication, and admin privileges. If the user downgrades their role, the session is updated.</p>
+            <div class="flex space-x-2">
+                <input id="protectedCsrfUserId" placeholder="Enter user ID" class="p-2 border rounded">
+                <select id="protectedCsrfRole" class="p-2 border rounded">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="auditor">Auditor</option>
+                </select>
+                <button onclick="protectedCSRF()" class="bg-green-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Update Role (Protected)</button>
+            </div>
+            <pre id="csrfOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="userManagementSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-blue-800">User Management</h2>
+            <p>View users in the database. Admins can delete users; Managers can only view.</p>
+            <button onclick="getUsers()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Refresh User List</button>
+            <div id="usersListOutput" class="mt-2 p-2 bg-gray-100 rounded"></div>
+
+            <h3 class="text-lg font-semibold text-blue-800 mt-4">Admin: View User Details</h3>
+            <p>Only admins can view detailed user information, including password storage method.</p>
+            <button onclick="getUserDetails()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">View User Details</button>
+            <pre id="userDetailsOutput" class="mt-2 p-2 bg-gray-100 rounded"></pre>
+        </section>
+
+        <section id="auditSection" class="hidden bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-lg font-semibold text-blue-800">Audit Logs</h2>
+            <p>Only auditors can view application logs to monitor system activity.</p>
+            <button onclick="getLogs()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">View Logs</button>
+            <pre id="logsOutput" class="mt-2 p-2 bg-gray-100 rounded h-64 overflow-auto"></pre>
+        </section>
+    </main>
+
+    <script>
+        let csrfToken = null;
+        let ddosInterval = null;
+        let currentUserRole = 'guest';
+
+        // Узагальнена функція для HTTP-запитів
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(options.method === 'POST' && csrfToken ? { 'X-CSRF-Token': csrfToken } : {})
+                    }
+                });
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.message || `Server error: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Валідація вводу
+        function validateInput(input, fieldName) {
+            if (!input) {
+                throw new Error(`${fieldName} is required!`);
+            }
+            if (input.length > 50) {
+                throw new Error(`${fieldName} is too long (max 50 characters)!`);
+            }
+            return input;
+        }
+
+        // Завантаження CSRF-токена
+        async function loadCsrfToken() {
+            try {
+                const response = await makeRequest("/get_csrf_token");
+                const result = await response.json();
+                csrfToken = result.csrf_token || null;
+                console.log("CSRF token loaded:", csrfToken);
+            } catch (error) {
+                console.error("Error loading CSRF token:", error);
+                document.getElementById("csrfOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        // Завантаження списку користувачів
+        async function loadUsersForSelection() {
+            try {
+                const response = await makeRequest("/get_users");
+                const result = await response.json();
+                if (result.status === "success") {
+                    result.data.forEach(user => {
+                        if (user.is_current) {
+                            document.getElementById("currentUser").innerText = `Logged in as: ${user.username} (Role: ${user.role})`;
+                            currentUserRole = user.role;
+                            console.log("Set currentUserRole:", currentUserRole);
+                            document.getElementById("loginBtn").classList.add("hidden");
+                            document.getElementById("logoutBtn").classList.remove("hidden");
+                        }
+                    });
+                    updateSectionVisibility();
+                    if (currentUserRole === 'admin' || currentUserRole === 'manager') {
+                        displayUsers(result.data);
+                    } else {
+                        document.getElementById("usersListOutput").innerText = "";
+                    }
+                } else {
+                    console.log("User list not accessible, assuming guest");
+                    document.getElementById("currentUser").innerText = "Logged in as: Guest (Role: guest)";
+                    currentUserRole = 'guest';
+                    updateSectionVisibility();
+                }
+            } catch (error) {
+                console.error("Error loading users:", error);
+                document.getElementById("currentUser").innerText = "Logged in as: Guest (Role: guest)";
+                currentUserRole = 'guest';
+                updateSectionVisibility();
+                document.getElementById("usersListOutput").innerText = "";
+            }
+        }
+
+        // Відображення списку користувачів
+        function displayUsers(users) {
+            const output = document.getElementById("usersListOutput");
+            output.innerHTML = '';
+            const ul = document.createElement('ul');
+            ul.className = 'list-disc pl-5';
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.innerText = `ID: ${user.id}, Username: ${user.username}, Role: ${user.role}${user.is_current ? ' (Current)' : ''}`;
+                if (currentUserRole === 'admin' && !user.is_current) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerText = 'Delete';
+                    deleteBtn.className = 'ml-2 bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm';
+                    deleteBtn.onclick = () => deleteUser(user.id);
+                    li.appendChild(deleteBtn);
+                }
+                ul.appendChild(li);
+            });
+            output.appendChild(ul);
+        }
+
+        // Очищення полів XSS
+        function clearXssInputs() {
+            document.getElementById("xssInput").value = "";
+            document.getElementById("safeXssInput").value = "";
+            document.getElementById("xssOutput").innerHTML = "";
+            localStorage.removeItem("xssInput");
+            localStorage.removeItem("safeXssInput");
+            console.log("XSS inputs cleared");
+        }
+
+        // Оновлення видимості секцій
+        function updateSectionVisibility() {
+            const sections = {
+                introSection: ['guest', 'user', 'admin', 'manager', 'auditor'],
+                dashboardSection: ['user', 'admin', 'manager', 'auditor'],
+                accessControlSection: ['user', 'admin', 'manager', 'auditor'],
+                sqlInjectionSection: ['user', 'admin', 'manager', 'auditor'],
+                xssSection: ['user', 'admin', 'manager', 'auditor'],
+                wafSection: ['user', 'admin', 'manager', 'auditor'],
+                ddosSection: ['user', 'admin', 'manager', 'auditor'],
+                ssrfSection: ['user', 'admin', 'manager', 'auditor'],
+                csrfSection: ['user', 'admin', 'manager', 'auditor'],
+                userManagementSection: ['admin', 'manager'],
+                auditSection: ['auditor']
+            };
+            Object.keys(sections).forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.toggle('hidden', !sections[sectionId].includes(currentUserRole));
+                }
+            });
+            const userDetailsBtn = document.querySelector('#userManagementSection button[onclick="getUserDetails()"]');
+            if (userDetailsBtn) {
+                userDetailsBtn.classList.toggle('hidden', currentUserRole !== 'admin');
+            }
+            console.log("Sections visibility updated for role:", currentUserRole);
+        }
+
+        // Ініціалізація сторінки
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("Page loaded, initializing...");
+            setTimeout(() => {
+                document.getElementById("currentUser").innerText = "Logged in as: Guest (Role: guest)";
+                currentUserRole = 'guest';
+                updateSectionVisibility();
+                loadCsrfToken();
+                clearXssInputs();
+                loadUsersForSelection();
+            }, 100);
+        });
+
+        // Глобальний обробник помилок
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            console.error(`Global error: ${msg}`, error);
+            alert(`An error occurred: ${msg}`);
+            return false;
+        };
+
+        function showLogin() { document.getElementById("loginForm").classList.remove("hidden"); }
+
+        async function login() {
+            try {
+                const username = validateInput(document.getElementById("loginUsername").value, "Username");
+                const password = validateInput(document.getElementById("loginPassword").value, "Password");
+                const response = await makeRequest("/login", {
+                    method: "POST",
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+                alert(result.message);
+                loadUsersForSelection();
+                document.getElementById("loginForm").classList.add("hidden");
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await makeRequest("/logout", {
+                    method: "POST"
+                });
+                const result = await response.json();
+                alert(result.message);
+                document.getElementById("currentUser").innerText = "Logged in as: Guest (Role: guest)";
+                currentUserRole = 'guest';
+                document.getElementById("loginBtn").classList.remove("hidden");
+                document.getElementById("logoutBtn").classList.add("hidden");
+                updateSectionVisibility();
+                document.getElementById("usersListOutput").innerText = "";
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function showCreateAccount() { document.getElementById("createAccountModal").classList.remove("hidden"); }
+        function closeCreateAccount() {
+            document.getElementById("createAccountModal").classList.add("hidden");
+            document.getElementById("createAccountOutput").innerText = "";
+            document.getElementById("createUsername").value = "";
+            document.getElementById("createPassword").value = "";
+        }
+
+        async function createAccount() {
+            const output = document.getElementById("createAccountOutput");
+            try {
+                const username = validateInput(document.getElementById("createUsername").value, "Username");
+                const password = validateInput(document.getElementById("createPassword").value, "Password");
+                const role = document.getElementById("createRole").value;
+                const mode = document.getElementById("createMode").value;
+
+                if (mode === "safe") {
+                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+                    if (!passwordRegex.test(password)) {
+                        throw new Error("Password must be at least 8 characters, include one uppercase letter, one lowercase letter, one number, and one special character from @$!%*?&#.");
+                    }
+                }
+
+                const endpoint = mode === "safe" ? "/create_account" : "/vulnerable_create_account";
+                const response = await makeRequest(`${endpoint}?demo=true`, {
+                    method: "POST",
+                    body: JSON.stringify({ username, password, role })
+                });
+                const result = await response.json();
+                output.innerText = result.message;
+                if (result.status === "success") {
+                    loadUsersForSelection();
+                    document.getElementById("createAccountModal").classList.add("hidden");
+                    alert(`Account created and logged in as ${username} (Role: ${role})`);
+                }
+            } catch (error) {
+                output.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function vulnerableAccess() {
+            try {
+                const userId = validateInput(document.getElementById("userId").value, "User ID");
+                const response = await makeRequest(`/vulnerable_access?user_id=${encodeURIComponent(userId)}`);
+                const result = await response.json();
+                document.getElementById("accessOutput").innerText = result.message;
+            } catch (error) {
+                document.getElementById("accessOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function protectedAccess() {
+            try {
+                const userId = validateInput(document.getElementById("protectedUserId").value, "User ID");
+                const response = await makeRequest(`/protected_access?user_id=${encodeURIComponent(userId)}`);
+                const result = await response.json();
+                document.getElementById("accessOutput").innerText = result.message;
+            } catch (error) {
+                document.getElementById("accessOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function vulnerableSQLInjection() {
+            const output = document.getElementById("sqlInjectionOutput");
+            try {
+                const username = validateInput(document.getElementById("sqlInjectionInput").value, "Username");
+                const response = await makeRequest(`/vulnerable_sql_injection?username=${encodeURIComponent(username)}`);
+                const result = await response.json();
+                output.innerText = result.message;
+            } catch (error) {
+                output.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function safeSQLInjection() {
+            const output = document.getElementById("sqlInjectionOutput");
+            try {
+                const username = validateInput(document.getElementById("safeSqlInjectionInput").value, "Username");
+                const response = await makeRequest(`/protected_sql_injection?username=${encodeURIComponent(username)}`);
+                const result = await response.json();
+                output.innerText = result.message;
+            } catch (error) {
+                output.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function vulnerableXSS() {
+            const input = document.getElementById("xssInput").value;
+            const xssOutput = document.getElementById("xssOutput");
+            if (!input) {
+                xssOutput.innerHTML = "";
+                xssOutput.innerText = "Error: Input is required!";
+                return;
+            }
+            try {
+                console.log("Sending vulnerable XSS request with input:", input);
+                const response = await makeRequest(`/vulnerable_xss?input=${encodeURIComponent(input)}&demo=true`);
+                const data = await response.text();
+                console.log("Received response:", data);
+
+                xssOutput.innerHTML = "";
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data;
+                const scripts = tempDiv.getElementsByTagName('script');
+                for (let script of scripts) {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = script.textContent;
+                    document.head.appendChild(newScript);
+                    console.log("Executed script:", script.textContent);
+                }
+                xssOutput.appendChild(tempDiv);
+            } catch (error) {
+                console.error("Vulnerable XSS error:", error);
+                xssOutput.innerHTML = "";
+                xssOutput.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function safeXSS() {
+            const input = document.getElementById("safeXssInput").value;
+            const xssOutput = document.getElementById("xssOutput");
+            if (!input) {
+                xssOutput.innerHTML = "";
+                xssOutput.innerText = "Error: Input is required!";
+                return;
+            }
+            try {
+                const response = await makeRequest(`/protected_xss?input=${encodeURIComponent(input)}`);
+                const data = await response.text();
+                xssOutput.innerHTML = data;
+            } catch (error) {
+                xssOutput.innerHTML = "";
+                xssOutput.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function testWAF() {
+            const input = document.getElementById("wafInput").value;
+            const wafOutput = document.getElementById("wafOutput");
+            if (!input) {
+                wafOutput.innerText = "Error: Input is required!";
+                return;
+            }
+            try {
+                const response = await makeRequest("/waf_demo", {
+                    method: "POST",
+                    body: JSON.stringify({ input })
+                });
+                const result = await response.json();
+                wafOutput.innerText = result.message;
+            } catch (error) {
+                wafOutput.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function simulateDDoS(mode) {
+            const output = document.getElementById("ddosOutput");
+            const endpoint = mode === "vulnerable" ? "/vulnerable_ddos" : "/protected_ddos";
+            let requestCount = 0;
+            output.innerText = `Simulating DDoS attack on ${endpoint}...\n`;
+
+            ddosInterval = setInterval(async () => {
+                try {
+                    const response = await makeRequest(endpoint);
+                    requestCount++;
+                    const result = await response.json();
+                    output.innerText += `Request ${requestCount}: ${result.message}\n`;
+                    output.scrollTop = output.scrollHeight;
+                } catch (error) {
+                    output.innerText += `Request ${requestCount}: Error - ${error.message}\n`;
+                    output.scrollTop = output.scrollHeight;
+                }
+            }, 100);
+        }
+
+        function stopDDoS() {
+            if (ddosInterval) {
+                clearInterval(ddosInterval);
+                ddosInterval = null;
+                document.getElementById("ddosOutput").innerText += "DDoS simulation stopped.\n";
+            }
+        }
+
+        async function vulnerableSSRF() {
+            const resource = document.getElementById("ssrfResource").value;
+            const ssrfOutput = document.getElementById("ssrfOutput");
+            if (!resource) {
+                ssrfOutput.innerText = "Error: Resource (URL or filepath) is required!";
+                return;
+            }
+            try {
+                const response = await makeRequest(`/vulnerable_ssrf_path?resource=${encodeURIComponent(resource)}`);
+                const result = await response.json();
+                console.log("SSRF/Path Response:", result.message);
+                ssrfOutput.innerText = result.message;
+            } catch (error) {
+                console.error("SSRF/Path Error:", error);
+                ssrfOutput.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function protectedSSRF() {
+            const resource = document.getElementById("ssrfResource").value;
+            const ssrfOutput = document.getElementById("ssrfOutput");
+            if (!resource) {
+                ssrfOutput.innerText = "Error: Resource (URL or filepath) is required!";
+                return;
+            }
+            try {
+                const response = await makeRequest(`/protected_ssrf_path?resource=${encodeURIComponent(resource)}`);
+                const result = await response.json();
+                ssrfOutput.innerText = result.message;
+            } catch (error) {
+                console.error("Protected SSRF/Path Error:", error);
+                ssrfOutput.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function vulnerableCSRF() {
+            const output = document.getElementById("csrfOutput");
+            try {
+                const userId = validateInput(document.getElementById("csrfUserId").value, "User ID");
+                const role = document.getElementById("csrfRole").value;
+                const response = await makeRequest("/vulnerable_csrf", {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: userId, role })
+                });
+                const result = await response.json();
+                output.innerText = result.message;
+                getUsers();
+            } catch (error) {
+                output.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function protectedCSRF() {
+            const output = document.getElementById("csrfOutput");
+            try {
+                const userId = validateInput(document.getElementById("protectedCsrfUserId").value, "User ID");
+                const role = document.getElementById("protectedCsrfRole").value;
+                if (!csrfToken) {
+                    await loadCsrfToken();
+                    if (!csrfToken) throw new Error("Unable to load CSRF token!");
+                }
+                const response = await makeRequest("/protected_csrf", {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: userId, role, csrf_token: csrfToken })
+                });
+                const result = await response.json();
+                output.innerText = result.message;
+                getUsers();
+                loadUsersForSelection();
+            } catch (error) {
+                output.innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function getUsers() {
+            try {
+                const response = await makeRequest("/get_users");
+                const result = await response.json();
+                if (result.status === "success") {
+                    displayUsers(result.data);
+                } else {
+                    document.getElementById("usersListOutput").innerText = result.message;
+                }
+            } catch (error) {
+                document.getElementById("usersListOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function getUserDetails() {
+            try {
+                const response = await makeRequest("/get_user_details");
+                const result = await response.json();
+                if (result.status === "success") {
+                    const output = document.getElementById("userDetailsOutput");
+                    output.innerText = JSON.stringify(result.data, null, 2);
+                } else {
+                    document.getElementById("userDetailsOutput").innerText = result.message;
+                }
+            } catch (error) {
+                document.getElementById("userDetailsOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm(`Are you sure you want to delete user ID ${userId}?`)) return;
+            try {
+                console.log("Attempting to delete user ID:", userId);
+                if (!csrfToken) {
+                    console.log("CSRF token missing, loading...");
+                    await loadCsrfToken();
+                    if (!csrfToken) throw new Error("Unable to load CSRF token!");
+                }
+                const response = await makeRequest("/delete_user", {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: parseInt(userId), csrf_token: csrfToken })
+                });
+                const result = await response.json();
+                document.getElementById("usersListOutput").innerText = "";
+                alert(result.message);
+                getUsers();
+            } catch (error) {
+                console.error("Delete user error:", error);
+                document.getElementById("usersListOutput").innerText = `Error: ${error.message}`;
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function getLogs() {
+            try {
+                const response = await makeRequest("/get_logs");
+                const result = await response.json();
+                if (result.status === "success") {
+                    document.getElementById("logsOutput").innerText = result.data;
+                } else {
+                    document.getElementById("logsOutput").innerText = result.message;
+                }
+            } catch (error) {
+                document.getElementById("logsOutput").innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
